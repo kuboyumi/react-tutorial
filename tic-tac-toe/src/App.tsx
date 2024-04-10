@@ -1,28 +1,49 @@
 import React, { useState } from 'react';
 import './App.css'
 
-export default function Board() {
+function Game() {
   const [xIsNext, setXIsNext] = useState<boolean>(true);
-  const [squares, setSquares] = useState<Array<string | null>>(Array(9).fill(null));
+  const [history, setHistory] = useState<Array<Array<string | null>>>([Array(9).fill(null)]);
+  const currentSquares = history[history.length - 1];
+
+  function handlePlay(nextSquares: Array<string | null>) {
+    setHistory([...history, nextSquares]);
+    setXIsNext(!xIsNext);
+  }
+
+  return(
+    <div className='game'>
+      <div className='game-board'>
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+      </div>
+      <div className='game-info'>
+        <ol>{}</ol>
+      </div>
+    </div>
+  );
+}
+export default Game;
+
+function Board({ xIsNext, squares, onPlay }: {xIsNext: boolean, squares: Array<string | null>, onPlay: (nextSquares: any) => void}) {
+  function handleClick(i: number) {
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    const nextSquares = squares.slice();
+    if (xIsNext) {
+      nextSquares[i] = "X";
+    } else {
+      nextSquares[i] = "O";
+    }
+    onPlay(nextSquares);
+  }
+
   const winner: string | null = calculateWinner(squares);
   let status: string;
-
   if (winner) {
     status = 'Winner: ' + winner;
   } else {
     status = 'Next player: ' + (xIsNext ? 'X' : 'O')
-  }
-
-  function handleClick(i: number) {
-    if (squares[i] || calculateWinner(squares)) return;
-    const nextSquares = squares.slice();
-    if (xIsNext) {
-      nextSquares[i] = 'X';
-    } else {
-      nextSquares[i] = 'O';
-    }
-    setXIsNext(!xIsNext);
-    setSquares(nextSquares);
   }
 
   return (
@@ -51,7 +72,7 @@ function Square({value, onSquareClick}: {value: string | null, onSquareClick: Re
   return <button className="square" onClick={onSquareClick}>{value}</button>;
 }
 
-function calculateWinner(squares: Array<string | null>) {
+function calculateWinner(squares: Array<string | null>): string | null {
   const lines: Array<Array<number>> = [
     [0, 1, 2],
     [3, 4, 5],
